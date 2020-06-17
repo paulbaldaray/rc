@@ -314,6 +314,7 @@ static void edit_catcher(int sig) {
 	sys_signal(SIGINT, oldint);
 	sys_signal(SIGQUIT, oldquit);
 	write(2, "\n", 1);
+	dquotes = FALSE; /* DQUOTES PATCH */
 	rc_raise(eError);
 }
 

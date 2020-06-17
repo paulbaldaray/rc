@@ -278,6 +278,7 @@ extern void inityy(void);
 extern void yyerror(const char *);
 extern void scanerror(char *);
 extern const char nw[], dnw[];
+extern bool dquotes; /* DQUOTES PATCH */
 
 /* list.c */
 extern void listfree(List *);
