@@ -36,7 +36,6 @@ static void getpair(int);
 int lineno;
 
 /* lookup table for non-word characters */
-/* DQUOTES PATCH : 34 -> " is now a nw */
 const char nw[] = {
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
@@ -48,7 +47,6 @@ const char nw[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-/* DQUOTES PATCH */
 /* lookup table for double quote non-word characters */
 const char dqnw[] = {
  /* 0  1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 */
@@ -75,7 +73,6 @@ const char dnw[] = {
 };
 
 /* lookup table for quotable characters: nw + glob metachars */
-/* DQUOTES PATCH : 34 -> " is now a nw */
 const char q[] = {
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
@@ -113,7 +110,6 @@ extern bool quotep(char *s, bool dollar) {
 	return FALSE;
 }
 
-/* DQUOTES PATCH */
 bool dquotes = FALSE;
 
 extern int yylex() {
@@ -135,7 +131,6 @@ extern int yylex() {
 		newline = FALSE;
 	}
 top:
-	/* DQUOTES PATCH */
 	meta = (dollar ? dnw : (dquotes ? dqnw : nw));
 	while (((c = gchar()) == ' ' || c == '\t') && (dollar || !dquotes))
 		w = NW;
@@ -150,14 +145,11 @@ top:
 	read:	do {
 			buf[i++] = c;
 
-			/* DQUOTES PATCH */
 			if (!dquotes && (c == '?' || c == '[' || c == '*'))
 				saw_meta = TRUE;
-
 			if (i >= bufsize)
 				buf = realbuf = erealloc(buf, bufsize *= 2);
 
-			/* DQUOTES PATCH */
 			if (c == '\\') {
 				c = gchar();
 				if (meta[(unsigned char) c] || c == '\n') i--;
@@ -171,7 +163,6 @@ top:
 				nextline();
 				c = ' '; /* Pretend a space was read */
 
-				/* DQUOTES PATCH */
 				if (dquotes) c = gchar();
 
 				break;
@@ -245,7 +236,6 @@ top:
 		ugchar(c);
 		return '$';
 	
-	/* DQUOTES PATCH */
 	case '"':
 		dquotes = !dquotes;
 		goto top;
