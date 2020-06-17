@@ -36,15 +36,30 @@ static void getpair(int);
 int lineno;
 
 /* lookup table for non-word characters */
+/* DQUOTES PATCH : 34 -> " is now a nw */
 const char nw[] = {
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+/* DQUOTES PATCH */
+/* lookup table for double quote non-word characters */
+const char dqnw[] = {
+ /* 0  1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 */
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /* lookup table for non-word characters in variable names */
@@ -60,9 +75,10 @@ const char dnw[] = {
 };
 
 /* lookup table for quotable characters: nw + glob metachars */
+/* DQUOTES PATCH : 34 -> " is now a nw */
 const char q[] = {
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -97,6 +113,9 @@ extern bool quotep(char *s, bool dollar) {
 	return FALSE;
 }
 
+/* DQUOTES PATCH */
+bool dquotes = FALSE;
+
 extern int yylex() {
 	static bool dollar = FALSE;
 	bool saw_meta = FALSE;
@@ -110,14 +129,17 @@ extern int yylex() {
 		return '\n';
 	}
 	/* rc variable-names may contain only alnum, '*' and '_', so use dnw if we are scanning one. */
-	meta = (dollar ? dnw : nw);
 	if (newline) {
 		--lineno; /* slight space optimization; nextline() always increments lineno */
 		nextline();
 		newline = FALSE;
 	}
-top:	while ((c = gchar()) == ' ' || c == '\t')
+top:
+	/* DQUOTES PATCH */
+	meta = (dollar ? dnw : (dquotes ? dqnw : nw));
+	while (((c = gchar()) == ' ' || c == '\t') && (dollar || !dquotes))
 		w = NW;
+
 	if (c != '(') dollar = FALSE;
 	if (c == EOF)
 		return END;
@@ -127,15 +149,31 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		i = 0;
 	read:	do {
 			buf[i++] = c;
-			if (c == '?' || c == '[' || c == '*')
+
+			/* DQUOTES PATCH */
+			if (!dquotes && (c == '?' || c == '[' || c == '*'))
 				saw_meta = TRUE;
+
 			if (i >= bufsize)
 				buf = realbuf = erealloc(buf, bufsize *= 2);
+
+			/* DQUOTES PATCH */
+			if (c == '\\') {
+				c = gchar();
+				if (meta[(unsigned char) c] || c == '\n') i--;
+				if (c != '\\' && c != '\n') goto read;
+			}
+			if (c == '\n') nextline();
+
 		} while ((c = gchar()) != EOF && !meta[(unsigned char) c]);
 		while (c == '\\') {
 			if ((c = gchar()) == '\n') {
 				nextline();
 				c = ' '; /* Pretend a space was read */
+
+				/* DQUOTES PATCH */
+				if (dquotes) c = gchar();
+
 				break;
 			} else {
 	bs:			if (meta != dnw) { /* all words but varnames may have a bslash */
@@ -206,6 +244,12 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 			return FLAT;
 		ugchar(c);
 		return '$';
+	
+	/* DQUOTES PATCH */
+	case '"':
+		dquotes = !dquotes;
+		goto top;
+
 	case '\'':
 		w = RW;
 		i = 0;
