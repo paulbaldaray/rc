@@ -91,6 +91,7 @@ static bool errset = FALSE;
 static bool prerror = FALSE;
 static wordstates w = NW;
 static int fd_left, fd_right;
+static bool dquotes = FALSE;
 
 #define checkfreecaret {if (w != NW) { w = NW; ugchar(c); return '^'; }}
 
@@ -109,8 +110,6 @@ extern bool quotep(char *s, bool dollar) {
 			return TRUE;
 	return FALSE;
 }
-
-bool dquotes = FALSE;
 
 extern int yylex() {
 	static bool dollar = FALSE;
@@ -155,16 +154,15 @@ top:
 				if (meta[(unsigned char) c] || c == '\n') i--;
 				if (c != '\\' && c != '\n') goto read;
 			}
-			if (c == '\n') nextline();
-
+			if (c == '\n')
+				nextline();
 		} while ((c = gchar()) != EOF && !meta[(unsigned char) c]);
 		while (c == '\\') {
 			if ((c = gchar()) == '\n') {
 				nextline();
 				c = ' '; /* Pretend a space was read */
-
-				if (dquotes) c = gchar();
-
+				if (dquotes)
+					c = gchar();
 				break;
 			} else {
 	bs:			if (meta != dnw) { /* all words but varnames may have a bslash */
@@ -235,11 +233,9 @@ top:
 			return FLAT;
 		ugchar(c);
 		return '$';
-	
 	case '"':
 		dquotes = !dquotes;
 		goto top;
-
 	case '\'':
 		w = RW;
 		i = 0;

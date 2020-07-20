@@ -1,0 +1,131 @@
+diff --git a/edit-readline.c b/edit-readline.c
+index 47c8db5..69b00ea 100644
+--- a/edit-readline.c
++++ b/edit-readline.c
+@@ -314,6 +314,7 @@ static void edit_catcher(int sig) {
+ 	sys_signal(SIGINT, oldint);
+ 	sys_signal(SIGQUIT, oldquit);
+ 	write(2, "\n", 1);
++	dquotes = FALSE;
+ 	rc_raise(eError);
+ }
+ 
+diff --git a/lex.c b/lex.c
+index 58c3df5..e4a72e4 100644
+--- a/lex.c
++++ b/lex.c
+@@ -38,7 +38,7 @@ int lineno;
+ /* lookup table for non-word characters */
+ const char nw[] = {
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
++	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+@@ -47,6 +47,19 @@ const char nw[] = {
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+ };
+ 
++/* lookup table for double quote non-word characters */
++const char dqnw[] = {
++ /* 0  1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 */
++ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
++};
++
+ /* lookup table for non-word characters in variable names */
+ const char dnw[] = {
+ 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+@@ -62,7 +75,7 @@ const char dnw[] = {
+ /* lookup table for quotable characters: nw + glob metachars */
+ const char q[] = {
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
++	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+ 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+ 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+@@ -78,6 +91,7 @@ static bool errset = FALSE;
+ static bool prerror = FALSE;
+ static wordstates w = NW;
+ static int fd_left, fd_right;
++static bool dquotes = FALSE;
+ 
+ #define checkfreecaret {if (w != NW) { w = NW; ugchar(c); return '^'; }}
+ 
+@@ -110,14 +124,16 @@ extern int yylex() {
+ 		return '\n';
+ 	}
+ 	/* rc variable-names may contain only alnum, '*' and '_', so use dnw if we are scanning one. */
+-	meta = (dollar ? dnw : nw);
+ 	if (newline) {
+ 		--lineno; /* slight space optimization; nextline() always increments lineno */
+ 		nextline();
+ 		newline = FALSE;
+ 	}
+-top:	while ((c = gchar()) == ' ' || c == '\t')
++top:
++	meta = (dollar ? dnw : (dquotes ? dqnw : nw));
++	while (((c = gchar()) == ' ' || c == '\t') && (dollar || !dquotes))
+ 		w = NW;
++
+ 	if (c != '(') dollar = FALSE;
+ 	if (c == EOF)
+ 		return END;
+@@ -127,15 +143,26 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
+ 		i = 0;
+ 	read:	do {
+ 			buf[i++] = c;
+-			if (c == '?' || c == '[' || c == '*')
++
++			if (!dquotes && (c == '?' || c == '[' || c == '*'))
+ 				saw_meta = TRUE;
+ 			if (i >= bufsize)
+ 				buf = realbuf = erealloc(buf, bufsize *= 2);
++
++			if (c == '\\') {
++				c = gchar();
++				if (meta[(unsigned char) c] || c == '\n') i--;
++				if (c != '\\' && c != '\n') goto read;
++			}
++			if (c == '\n')
++				nextline();
+ 		} while ((c = gchar()) != EOF && !meta[(unsigned char) c]);
+ 		while (c == '\\') {
+ 			if ((c = gchar()) == '\n') {
+ 				nextline();
+ 				c = ' '; /* Pretend a space was read */
++				if (dquotes)
++					c = gchar();
+ 				break;
+ 			} else {
+ 	bs:			if (meta != dnw) { /* all words but varnames may have a bslash */
+@@ -206,6 +233,9 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
+ 			return FLAT;
+ 		ugchar(c);
+ 		return '$';
++	case '"':
++		dquotes = !dquotes;
++		goto top;
+ 	case '\'':
+ 		w = RW;
+ 		i = 0;
+diff --git a/rc.h b/rc.h
+index c3b2243..7fdb01a 100644
+--- a/rc.h
++++ b/rc.h
+@@ -278,6 +278,7 @@ extern void inityy(void);
+ extern void yyerror(const char *);
+ extern void scanerror(char *);
+ extern const char nw[], dnw[];
++extern bool dquotes;
+ 
+ /* list.c */
+ extern void listfree(List *);
